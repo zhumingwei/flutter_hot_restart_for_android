@@ -2,6 +2,7 @@ package com.zhumingwei.flutterhotapp;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Looper;
@@ -10,14 +11,12 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
+import com.zhumingwei.flutterhotapp.util.Util;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
@@ -32,7 +31,9 @@ import io.flutter.embedding.engine.FlutterJNI;
 import io.flutter.embedding.engine.loader.FlutterLoader;
 import io.flutter.plugin.platform.PlatformViewsController;
 import io.flutter.util.PathUtils;
-import io.flutter.view.FlutterMain;
+
+import static android.content.Context.MODE_PRIVATE;
+import static com.zhumingwei.flutterhotapp.MyApplication.LOAD_KEY;
 
 /**
  * @author zhumingwei
@@ -40,33 +41,41 @@ import io.flutter.view.FlutterMain;
  * @email zhumingwei@bilibili.com
  */
 public class MyApplication extends Application {
+    public static String LOAD_KEY = "load_key";
     public static String TAG = "Flutter";
+    public static Application context;
     @Override
     public void onCreate() {
+        context = this;
         super.onCreate();
         MyFlutterLoader.getInstance().startInitialization(this);
+        prepare();
+    }
 
-        new Thread(()->{
-            File dest = new File(getApplicationContext().getFilesDir() + "/libnewapp.so");
-            if (!dest.exists()){
+    private void prepare() {
+        //TODO 替换自己想要的逻辑,这里只是简单地复制asset到本地目录模拟下载
+        InputStream olds = null;
+        File outputfile = new File(getFilesDir().getAbsoluteFile() + "/" + "target.so");
+        try {
+            olds = getAssets().open("version1_libapp.so");
+
+            File out;
+            FileOutputStream patchouts;
+            out = outputfile;
+            patchouts = new FileOutputStream(out);
+            Util.copy(olds, patchouts);
+            patchouts.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (olds != null) {
                 try {
-                    dest.createNewFile();
-                    try {
-                        downloadRequest("http://192.168.0.138:18080/libapp.so", dest);
-                    } catch (IOException e) {
-                        Log.d("Flutter","download error:"+e.getMessage());
-                        e.printStackTrace();
-                    }
+                    olds.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            } else{
-                //已经下载过了
             }
-
-
-
-        }).start();
+        }
     }
 
     public void downloadRequest(String urlStr, File dstFile) throws IOException {
@@ -264,9 +273,12 @@ class MyFlutterLoader extends FlutterLoader{
     }
 
     private void setReleaseArgs(List<String> shellArgs, ApplicationInfo applicationInfo, Context applicationContext) {
-        File dest = new File(applicationContext.getFilesDir() + "/libnewapp.so");
-        Log.d(TAG,"");
-        if (dest.exists()){
+        File dest = new File(applicationContext.getFilesDir().getAbsoluteFile() + "/" + "target.so");
+        SharedPreferences sharedPreferences = MyApplication.context.getSharedPreferences("private",MODE_PRIVATE);
+        boolean loadnew = sharedPreferences.getBoolean(LOAD_KEY,false);
+        Log.e(TAG, "loadnew=="+loadnew);
+        Log.e(TAG, "dest.exists()=="+dest.exists());
+        if (loadnew && dest.exists()){
             Log.e(TAG, "setReleaseArgs: 加载新的so le");
             shellArgs.add(
                     "--"
@@ -286,8 +298,6 @@ class MyFlutterLoader extends FlutterLoader{
         }
 
     }
-
-
 }
 
 class MyFlutterEngine extends FlutterEngine{

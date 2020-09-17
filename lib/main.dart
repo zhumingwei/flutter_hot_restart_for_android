@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter/services.dart';
+MethodChannel channel = MethodChannel("a.b/test");
 void main() {
   runApp(MyApp());
 }
@@ -26,7 +27,7 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo ERROR Page'),
+      home: MyHomePage(title: 'Flutter update Page'),
     );
   }
 }
@@ -59,6 +60,8 @@ class _MyHomePageState extends State<MyHomePage> {
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
+//      _counter = (_counter++ / 0) as int;
+      _counter++;
       _counter++;
     });
   }
@@ -98,7 +101,46 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'You have pushed the button this many times:',
+              '我是版本2',
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              children: <Widget>[
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      height: 40,
+                      color: Colors.blue,
+                      child: Center(
+                        child: FlatButton(
+                          onPressed: () {
+                            channel.invokeMethod("load_new");
+                          },
+                          child: Text("加载新的so"),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: FlatButton(
+                      onPressed: (){
+                        channel.invokeMethod("revert");
+                      },
+                      child: Container(
+                        height: 40,
+                        color: Colors.blue,
+                        child: Center(
+                          child: Text("回退"),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             Text(
               '$_counter',
