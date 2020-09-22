@@ -37,7 +37,7 @@ public class MainActivity extends FlutterActivity {
     @Nullable
     @Override
     public FlutterEngine provideFlutterEngine(@NonNull Context context) {
-        return new MyFlutterEngine(context);
+        return null;
     }
 
     @Override

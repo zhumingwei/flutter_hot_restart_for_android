@@ -48,8 +48,8 @@ public class MyApplication extends Application {
     public void onCreate() {
         context = this;
         super.onCreate();
-        MyFlutterLoader.getInstance().startInitialization(this);
-        prepare();
+        FlutterLoader.getInstance().startInitialization(this);
+//        prepare();
     }
 
     private void prepare() {
